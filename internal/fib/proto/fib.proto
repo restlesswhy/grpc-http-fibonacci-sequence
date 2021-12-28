@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package fiboService;
+option go_package = ".;fiboService";
+
+
+message FiboRequest {
+    int32 from = 1;
+    int32 to = 2;
+}
+
+message FiboResponse {
+    int64 result = 1;
+}
+
+service FiboSequenceService {
+    rpc Get(FiboRequest) returns (FiboResponse);
+}
