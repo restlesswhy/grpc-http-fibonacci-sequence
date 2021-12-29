@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/labstack/echo/v4"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/delivery/grpcdel"
@@ -24,6 +25,7 @@ const (
 
 type Server struct {
 	cfg *config.Config
+	redisClient *redis.Client
 }
 
 func NewServer(cfg *config.Config) *Server {

@@ -10,6 +10,19 @@ import (
 type Config struct {
 	ServerGrpc GrpcConfig
 	ServerHttp HttpConfig
+	Redis RedisConfig
+}
+
+type RedisConfig struct {
+	RedisAddr      string
+	RedisPassword  string
+	RedisDB        string
+	RedisDefaultdb string
+	MinIdleConns   int
+	PoolSize       int
+	PoolTimeout    int
+	Password       string
+	DB             int
 }
 
 type GrpcConfig struct {
