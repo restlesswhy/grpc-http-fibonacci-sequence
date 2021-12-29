@@ -11,7 +11,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
+	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/delivery/grpcdel"
+	pb "github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/proto"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 const (
@@ -30,9 +34,9 @@ func NewServer(cfg *config.Config) *Server {
 
 func (s *Server) Run() error {
 	httpserver := &http.Server{
-		Addr:           s.cfg.Server.Port,
-		ReadTimeout:    time.Second * s.cfg.Server.ReadTimeout,
-		WriteTimeout:   time.Second * s.cfg.Server.WriteTimeout,
+		Addr:           s.cfg.ServerHttp.Port,
+		ReadTimeout:    time.Second * s.cfg.ServerHttp.ReadTimeout,
+		WriteTimeout:   time.Second * s.cfg.ServerHttp.WriteTimeout,
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
@@ -43,19 +47,32 @@ func (s *Server) Run() error {
 
 
 	go func() {
-		logger.Infof("Server is listening on PORT: %s", s.cfg.Server.Port)
+		logger.Infof("HTTP server is listening on PORT: %s", s.cfg.ServerHttp.Port)
 		if err := router.StartServer(httpserver); err != nil {
 			logger.Fatalf("Error starting Server: ", err)
 		}
 	}()
 
-	l, err := net.Listen("tcp", s.cfg.Server.Port)
+	l, err := net.Listen("tcp", s.cfg.ServerGrpc.Port)
 	if err != nil {
 		return err
 	}
 	defer l.Close()
 
-	
+	server := grpc.NewServer(grpc.KeepaliveParams(keepalive.ServerParameters{
+		MaxConnectionIdle: s.cfg.ServerGrpc.MaxConnectionIdle * time.Minute,
+		Timeout:           s.cfg.ServerGrpc.Timeout * time.Second,
+		MaxConnectionAge:  s.cfg.ServerGrpc.MaxConnectionAge * time.Minute,
+		Time:              s.cfg.ServerGrpc.Timeout * time.Minute,
+	}))
+
+	fiboGrpcMicroservice := grpcdel.NewFibMicroservice()
+	pb.RegisterFiboSequenceServiceServer(server, fiboGrpcMicroservice)
+
+	go func() {
+		logger.Infof("gRPC server is listening on port: %v", s.cfg.ServerGrpc.Port)
+		logger.Fatal(server.Serve(l))
+	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
@@ -68,10 +85,14 @@ func (s *Server) Run() error {
 	}
 
 	if err := router.Shutdown(ctx); err != nil {
-		logger.Errorf("Metrics router.Shutdown: %v", err)
+		logger.Errorf("router.Shutdown: %v", err)
 	}
 	server.GracefulStop()
-	logger.Info("Server Exited Properly")
+	logger.Info("Servers Exited Properly")
 
 	return nil
+}
+
+func getSequence(c echo.Context) error {
+	return c.String(http.StatusOK, "Hello, World!")
 }

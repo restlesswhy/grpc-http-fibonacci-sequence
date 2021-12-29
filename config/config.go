@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	Server    ServerConfig
+	ServerGrpc GrpcConfig
+	ServerHttp HttpConfig
 }
 
-type ServerConfig struct {
+type GrpcConfig struct {
 	Port              string
 	ReadTimeout       time.Duration
 	WriteTimeout      time.Duration
@@ -20,6 +21,12 @@ type ServerConfig struct {
 	Timeout           time.Duration
 	MaxConnectionAge  time.Duration
 	Time              time.Duration
+}
+
+type HttpConfig struct {
+	Port string
+	ReadTimeout       time.Duration
+	WriteTimeout      time.Duration
 }
 
 func LoadConfig(configName string) (*viper.Viper, error) {

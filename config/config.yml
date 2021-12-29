@@ -1,0 +1,14 @@
+servergrpc:
+  Port: :5000
+  ReadTimeout: 5
+  WriteTimeout: 5
+  CtxDefaultTimeout: 12
+  MaxConnectionIdle: 5
+  Timeout: 15
+  MaxConnectionAge: 5
+  Time: 120
+
+serverhttp:
+  Port: :8000
+  ReadTimeout: 10
+  WriteTimeout: 10

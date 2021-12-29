@@ -16,8 +16,10 @@ func main() {
 	if err != nil {
 		logger.Fatalf("cant get config: %v", err)
 	}
-
+	logger.Info(cfg.ServerGrpc.Port)
 	s := server.NewServer(cfg)
 	
+
+
 	logger.Fatal(s.Run())
 }
