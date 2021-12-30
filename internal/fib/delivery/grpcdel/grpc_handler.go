@@ -16,6 +16,11 @@ func NewFibMicroservice(fibUC fib.UseCase) *FibMicroservice {
 	return &FibMicroservice{fibUC: fibUC}
 }
 
-func (f *FibMicroservice) Get(context.Context, *pb.FiboRequest) (*pb.FiboResponse, error) {
-	return nil, nil
+func (f *FibMicroservice) Get(ctx context.Context, in *pb.FiboRequest) (*pb.FiboResponse, error) {
+
+	y, _ := f.fibUC.GetSeq(in.From, in.To)
+
+	return &pb.FiboResponse{
+		Result: y,
+	}, nil
 }

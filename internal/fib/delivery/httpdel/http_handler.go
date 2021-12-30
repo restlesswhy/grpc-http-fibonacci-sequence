@@ -19,6 +19,9 @@ func NewFibHandler(fibUC fib.UseCase) fib.Handler {
 
 func (h *fibHandler) Get() echo.HandlerFunc {
 	return func(c echo.Context) error {
+		
+
+		h.fibUC.GetSeq()
 		return c.JSON(http.StatusOK, map[string]string{"status": "OK"})
 
 	}

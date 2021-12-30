@@ -1,5 +1,5 @@
 package fib
 
 type UseCase interface {
-	Get(x, y int32) 
+	GetSeq(x, y int32) (map[int32]int64, error)
 }
