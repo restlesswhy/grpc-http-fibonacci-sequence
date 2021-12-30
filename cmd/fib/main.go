@@ -6,6 +6,7 @@ import (
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/server"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
+	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/redis"
 )
 
 func main() {
@@ -16,10 +17,13 @@ func main() {
 	if err != nil {
 		logger.Fatalf("cant get config: %v", err)
 	}
-	logger.Info(cfg.ServerGrpc.Port)
-	s := server.NewServer(cfg)
-	
 
+	redisClient := redis.NewRedisClient(cfg)
+	defer redisClient.Close()
+	logger.Info("Redis connected")
+
+	s := server.NewServer(cfg, redisClient)
+	
 
 	logger.Fatal(s.Run())
 }

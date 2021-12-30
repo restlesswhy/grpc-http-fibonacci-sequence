@@ -13,7 +13,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/delivery/grpcdel"
+	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/delivery/httpdel"
 	pb "github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/proto"
+	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/repository"
+	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/usecase"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -24,13 +27,16 @@ const (
 )
 
 type Server struct {
+	echo        *echo.Echo
 	cfg *config.Config
 	redisClient *redis.Client
 }
 
-func NewServer(cfg *config.Config) *Server {
+func NewServer(cfg *config.Config, redisClient *redis.Client) *Server {
 	return &Server{
+		echo: echo.New(),
 		cfg: cfg,
+		redisClient: redisClient,
 	}
 }
 
@@ -43,14 +49,17 @@ func (s *Server) Run() error {
 	}
 
 	ctx := context.Background()
-	
-	router := echo.New()
-	router.GET("/fib", getSequence)
+	redisRepo := repository.NewRedisRepo(s.redisClient)
+	fibUC := usecase.NewFibUC(s.cfg, redisRepo)
+	fibHandler := httpdel.NewFibHandler(fibUC)
 
+	if err := s.MapHandlers(s.echo, fibHandler); err != nil {
+		return err
+	}
 
 	go func() {
 		logger.Infof("HTTP server is listening on PORT: %s", s.cfg.ServerHttp.Port)
-		if err := router.StartServer(httpserver); err != nil {
+		if err := s.echo.StartServer(httpserver); err != nil {
 			logger.Fatalf("Error starting Server: ", err)
 		}
 	}()
@@ -68,7 +77,7 @@ func (s *Server) Run() error {
 		Time:              s.cfg.ServerGrpc.Timeout * time.Minute,
 	}))
 
-	fiboGrpcMicroservice := grpcdel.NewFibMicroservice()
+	fiboGrpcMicroservice := grpcdel.NewFibMicroservice(fibUC)
 	pb.RegisterFiboSequenceServiceServer(server, fiboGrpcMicroservice)
 
 	go func() {
@@ -86,7 +95,7 @@ func (s *Server) Run() error {
 		logger.Errorf("ctx.Done: %v", done)
 	}
 
-	if err := router.Shutdown(ctx); err != nil {
+	if err := s.echo.Shutdown(ctx); err != nil {
 		logger.Errorf("router.Shutdown: %v", err)
 	}
 	server.GracefulStop()
@@ -95,6 +104,3 @@ func (s *Server) Run() error {
 	return nil
 }
 
-func getSequence(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
-}
