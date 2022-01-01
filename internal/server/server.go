@@ -49,7 +49,7 @@ func (s *Server) Run() error {
 	}
 
 	ctx := context.Background()
-	redisRepo := repository.NewRedisRepo(s.redisClient)
+	redisRepo := repository.NewRedisRepo(s.redisClient, s.cfg)
 	fibUC := usecase.NewFibUC(s.cfg, redisRepo)
 	fibHandler := httpdel.NewFibHandler(fibUC)
 

@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"time"
+	// "time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
@@ -16,10 +16,7 @@ func NewRedisClient(cfg *config.Config) *redis.Client {
 	}
 
 	client := redis.NewClient(&redis.Options{
-		Addr:         redisHost,
-		MinIdleConns: cfg.Redis.MinIdleConns,
-		PoolSize:     cfg.Redis.PoolSize,
-		PoolTimeout:  time.Duration(cfg.Redis.PoolTimeout) * time.Second,
+		Addr:         cfg.Redis.RedisAddr,
 		Password:     cfg.Redis.Password, // no password set
 		DB:           cfg.Redis.DB,       // use default DB
 	})

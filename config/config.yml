@@ -15,11 +15,6 @@ serverhttp:
 
 redis:
   RedisAddr: localhost:6379
-  RedisPassword:
-  RedisDb: 0
-  RedisDefaultdb: 0
-  MinIdleConns: 200
-  PoolSize: 12000
-  PoolTimeout: 240
   Password: ""
   DB: 0
+  FibTTL: 24h

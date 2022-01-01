@@ -1,5 +1,11 @@
 package fib
 
+import (
+	"context"
+
+	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/models"
+)
+
 type UseCase interface {
-	GetSeq(x, y int32) (map[int32]int64, error)
+	GetSeq(ctx context.Context,x, y int32) (models.FibSeq, error)
 }

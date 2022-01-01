@@ -20,8 +20,8 @@ func main() {
 	client := pb.NewFiboSequenceServiceClient(conn)
 	
 	resp, err := client.Get(context.Background(), &pb.FiboRequest{
-		From: 6,
-		To: 20,
+		From: 3,
+		To: 10,
 	})
 	if err != nil {
 		log.Fatalf("could not get answer: %v", err)

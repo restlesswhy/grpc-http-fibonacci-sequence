@@ -2,3 +2,10 @@ GET http://localhost:8000/api/health
 
 ###
 GET http://localhost:8000/api/seq
+Content-Type: application/json
+
+{
+    "from": 3,
+    "to": 10
+}
+###

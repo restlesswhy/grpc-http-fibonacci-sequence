@@ -10,19 +10,14 @@ import (
 type Config struct {
 	ServerGrpc GrpcConfig
 	ServerHttp HttpConfig
-	Redis RedisConfig
+	Redis      RedisConfig
 }
 
 type RedisConfig struct {
 	RedisAddr      string
-	RedisPassword  string
-	RedisDB        string
-	RedisDefaultdb string
-	MinIdleConns   int
-	PoolSize       int
-	PoolTimeout    int
 	Password       string
 	DB             int
+	FibTTL         time.Duration
 }
 
 type GrpcConfig struct {
@@ -37,9 +32,9 @@ type GrpcConfig struct {
 }
 
 type HttpConfig struct {
-	Port string
-	ReadTimeout       time.Duration
-	WriteTimeout      time.Duration
+	Port         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
 }
 
 func LoadConfig(configName string) (*viper.Viper, error) {

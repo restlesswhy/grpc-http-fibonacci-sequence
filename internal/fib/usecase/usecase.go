@@ -1,13 +1,16 @@
 package usecase
 
 import (
+	"context"
+	"strconv"
+
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib"
+	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/models"
+	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
+	// "github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
 )
 
-func init() {
-	cache = make(map[int32]int64)
-}
 
 type fibUC struct {
 	cfg *config.Config
@@ -21,33 +24,36 @@ func NewFibUC(cfg *config.Config, redisRepo fib.RedisRepository) fib.UseCase {
 	}
 }
 
-func (f *fibUC) GetSeq(x, y int32) (map[int32]int64, error) {
-	res := make(map[int32]int64)
-	interval := makeInterval(int(x), int(y))
-	for _, v := range interval {
-		f := getFib(int32(v))
-		res[int32(v)] = f
-	}
+func (f *fibUC) GetSeq(ctx context.Context, from, to int32) (models.FibSeq, error) {
+	var fibSeq models.FibSeq
+	fibSeq.Seq = make(map[int32]int64)
 
-	return res, nil
+	interval := makeInterval(int(from), int(to))
+	for _, v := range interval {
+		fibItem := f.getFib(ctx, int32(v))
+		fibSeq.Seq[int32(v)] = fibItem
+	}
+	
+	return fibSeq, nil
 }
 
-var (
-	cache map[int32]int64
-)
-
-
-func getFib(n int32) int64 {
+func (f *fibUC) getFib(ctx context.Context, n int32) int64 {
 	if n <= 1 {
 		return int64(n)
 	}
 
-	if r, ok := cache[n]; ok {
-		return r
-	}
+	nStr := strconv.Itoa(int(n))
 
-	sum := getFib(n-1) + getFib(n-2)
-	cache[n] = sum
+	if res, ok, _ := f.redisRepo.CheckFib(ctx, nStr); ok {
+		return res
+	}
+	
+
+	sum := f.getFib(ctx, n-1) + f.getFib(ctx, n-2)
+
+	if err := f.redisRepo.Add(ctx, nStr, sum); err != nil {
+		logger.Errorf("fibUC.getFib.redisRepo.Add: %s", err)
+	}
 
 	
 	return sum
