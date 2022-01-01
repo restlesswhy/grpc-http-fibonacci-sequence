@@ -14,7 +14,7 @@ serverhttp:
   WriteTimeout: 10
 
 redis:
-  RedisAddr: localhost:6379
+  RedisAddr: redis:6379
   Password: ""
   DB: 0
   FibTTL: 24h

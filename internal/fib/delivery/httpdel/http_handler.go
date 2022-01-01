@@ -29,8 +29,15 @@ func (h *fibHandler) Get() echo.HandlerFunc {
 			return err
 		}
 
-		seq, _ := h.fibUC.GetSeq(c.Request().Context(), interval.From, interval.To)
-		logger.Info(seq)
+		if interval.From < interval.To || interval.From < 0 || interval.To < 0 {
+			return c.JSON(http.StatusBadRequest, "not correct input")
+		}
+		
+		seq, err := h.fibUC.GetSeq(c.Request().Context(), interval.From, interval.To)
+		if err != nil {
+			logger.Error(err)
+			return c.JSON(http.StatusInternalServerError, err)
+		}
 
 		return c.JSON(http.StatusOK, seq)
 	}
