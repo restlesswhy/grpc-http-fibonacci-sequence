@@ -17,4 +17,4 @@ redis:
   RedisAddr: redis:6379
   Password: ""
   DB: 0
-  FibTTL: 24h
+  FibTTL: 10s
