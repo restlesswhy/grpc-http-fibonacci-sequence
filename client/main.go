@@ -4,8 +4,6 @@ import (
 	"context"
 	"log"
 
-	// pb "github.com/restlesswhy/grpc/shortener-client/proto"
-
 	pb "github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/proto"
 	"google.golang.org/grpc"
 )
@@ -21,20 +19,11 @@ func main() {
 	
 	resp, err := client.Get(context.Background(), &pb.FiboRequest{
 		From: 1,
-		To: 120,
+		To: 100,
 	})
 	if err != nil {
 		log.Fatalf("could not get answer: %v", err)
 	}
 
-	// ress, err := client.Get(context.Background(), &pb.UGRequest{
-	// 	ShortUrl: "WOEAi4MH23",
-	// })
-	// if err != nil {
-	// 	log.Fatalf("could not get answer: %v", err)
-	// }
-
-
 	log.Println("Sequence:", resp.Result)
-	// log.Println("Long url:", ress.LongUrl)
 }

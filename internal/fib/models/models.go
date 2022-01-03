@@ -1,7 +1,7 @@
 package models
 
 type FibSeq struct {
-	Seq map[int32]int64 `json:"seq"`
+	Seq map[int32]string `json:"seq"`
 }
 
 type Interval struct {

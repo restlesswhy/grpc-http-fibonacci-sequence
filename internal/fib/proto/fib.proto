@@ -10,7 +10,7 @@ message FiboRequest {
 }
 
 message FiboResponse {
-    map<int32, int64> result = 1;
+    map<int32, string> result = 1;
 }
 
 service FiboSequenceService {

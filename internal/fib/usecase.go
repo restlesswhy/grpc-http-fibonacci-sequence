@@ -7,5 +7,5 @@ import (
 )
 
 type UseCase interface {
-	GetSeq(ctx context.Context,x, y int32) (models.FibSeq, error)
+	GetSeq(ctx context.Context, from, to int32) (models.FibSeq, error)
 }

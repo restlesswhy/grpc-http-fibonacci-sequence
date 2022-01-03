@@ -3,7 +3,6 @@ module github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence
 go 1.17
 
 require (
-	github.com/labstack/echo v3.3.10+incompatible
 	github.com/spf13/viper v1.10.1
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
