@@ -10,17 +10,17 @@ import (
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
 )
 
-type fibHandler struct {
+type FibHandler struct {
 	fibUC fib.UseCase
 }
 
 func NewFibHandler(fibUC fib.UseCase) fib.Handler {
-	return &fibHandler{
+	return &FibHandler{
 		fibUC: fibUC,
 	}
 }
 
-func (h *fibHandler) Get() echo.HandlerFunc {
+func (h *FibHandler) Get() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var interval models.Interval
 
@@ -39,6 +39,6 @@ func (h *fibHandler) Get() echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 
-		return c.JSON(http.StatusOK, seq)
+		return c.JSON(http.StatusOK, seq.Seq)
 	}
 }

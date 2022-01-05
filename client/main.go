@@ -19,7 +19,7 @@ func main() {
 	
 	resp, err := client.Get(context.Background(), &pb.FiboRequest{
 		From: 1,
-		To: 100,
+		To: 600,
 	})
 	if err != nil {
 		log.Fatalf("could not get answer: %v", err)

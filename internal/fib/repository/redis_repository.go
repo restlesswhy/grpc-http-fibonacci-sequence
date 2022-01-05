@@ -3,30 +3,31 @@ package repository
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/cache/v8"
 	"github.com/pkg/errors"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib"
-	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
-	// "github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
-	// "github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
 )
 
 type redisRepo struct {
 	cfg *config.Config
-	redisClient *redis.Client
+	cache *cache.Cache
 }
 
-// Auth redis repository constructor
-func NewRedisRepo(redisClient *redis.Client, cfg *config.Config) fib.RedisRepository {
-	return &redisRepo{redisClient: redisClient, cfg: cfg}
+func NewRedisRepo(cache *cache.Cache, cfg *config.Config) fib.RedisRepository {
+	return &redisRepo{cache: cache, cfg: cfg}
 }
 
 func (r *redisRepo) Add(ctx context.Context, key string, value string) error {
-	if err := r.redisClient.Set(ctx, key, value, r.cfg.Redis.FibTTL).Err(); err != nil {
-		return errors.Wrap(err, "redisRepo.Add.redisClient.Set")
+	if err := r.cache.Set(&cache.Item{
+		Ctx:   ctx,
+		Key:   key,
+		Value: value,
+		TTL: r.cfg.Redis.FibTTL,
+	}); err != nil {
+		errors.Wrap(err, "redisRepo.Add.redisClient.Set")
 	}
-	// logger.Infof("added: %v, value: %v", key, value)
+	
 	return nil
 }
 
@@ -35,13 +36,22 @@ func (r *redisRepo) CheckFib(ctx context.Context, key string) (string, bool, err
 	var res string
 	var err error
 	
-	if res, err = r.redisClient.Get(ctx, key).Result(); err == redis.Nil {
-		logger.Info("exist: ", isExist)
-		return "", isExist, nil
-	} else if err != nil {
+
+	if err = r.cache.Get(ctx, key, &res); err != nil {
 		return "", isExist, errors.Wrap(err, "redisRepo.Add.redisClient.Get")
 	}
-		
+
+	if res == "" {
+		return res, isExist, err
+	}
+
+	// if res, err = r.redisClient.Get(ctx, key).Result(); err == redis.Nil {
+	// 	logger.Info("exist: ", isExist)
+	// 	return "", isExist, nil
+	// } else if err != nil {
+	// 	return "", isExist, errors.Wrap(err, "redisRepo.Add.redisClient.Get")
+	// }
+	// logger.Info("found in cache: ", res)
 	isExist = true
-	return res, isExist, nil
+	return res, isExist, err
 }

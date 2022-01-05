@@ -14,10 +14,9 @@ type Config struct {
 }
 
 type RedisConfig struct {
-	RedisAddr      string
-	Password       string
-	DB             int
-	FibTTL         time.Duration
+	Caching   bool
+	RedisAddr string
+	FibTTL    time.Duration
 }
 
 type GrpcConfig struct {

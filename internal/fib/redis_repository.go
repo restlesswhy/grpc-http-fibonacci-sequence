@@ -1,3 +1,4 @@
+//go:generate mockgen -source redis_repository.go -destination mock/redis.go -package mock
 package fib
 
 import "context"

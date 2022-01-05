@@ -5,14 +5,12 @@ import (
 	"math/big"
 	"strconv"
 
-	// "sync"
 	"time"
 
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/models"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
-	// "github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
 )
 
 type fibUC struct {
@@ -27,15 +25,18 @@ func NewFibUC(cfg *config.Config, redisRepo fib.RedisRepository) fib.UseCase {
 	}
 }
 
+// GetSeq главная функция бизнес логики, создает заданный слайс
 func (f *fibUC) GetSeq(ctx context.Context, from, to int32) (models.FibSeq, error) {
 	t := time.Now()
 	var fibSeq models.FibSeq
 	fibSeq.Seq = make(map[int32]string)
 
+	// создаем интервал
 	interval := makeInterval(int(from), int(to))
-	logger.Info(interval)
+	// logger.Info(interval)
+	// выполняем бизнес логику по каждому элементу интервала
 	for _, v := range interval {
-		fibItem := f.getFib(ctx, uint(v))
+		fibItem := f.getFib(ctx, uint(v), f.cfg.Redis.Caching)
 		fibItemStr := fibItem.String()
 		fibSeq.Seq[int32(v)] = fibItemStr
 	}
@@ -44,18 +45,25 @@ func (f *fibUC) GetSeq(ctx context.Context, from, to int32) (models.FibSeq, erro
 	return fibSeq, nil
 }
 
-func (f *fibUC) getFib(ctx context.Context, n uint) *big.Int {
+// getFib вычисляет число фиобанччи, работает с базой данных
+func (f *fibUC) getFib(ctx context.Context, n uint, caching bool) *big.Int {
+
+	
 	if n <= 1 {
 		return big.NewInt(int64(n))
 	}
 
-	res := new(big.Int)
-	nStr := strconv.Itoa(int(n))
-	if fib, ok, _ := f.redisRepo.CheckFib(ctx, nStr); ok {
-		res, _ := res.SetString(fib, 10)
-		return res
+	// проверяем наличие числа в базе, если отсутствует то вычисляем его и добаляем в базу
+	if caching {
+		res := new(big.Int)
+		nStr := strconv.Itoa(int(n))
+
+		if fib, ok, _ := f.redisRepo.CheckFib(ctx, nStr); ok {
+			res, _ := res.SetString(fib, 10)
+			return res
+		}
 	}
-	
+
 	var n2, n1 = big.NewInt(0), big.NewInt(1)
 
 	for i := uint(1); i < n; i++ {
@@ -63,14 +71,20 @@ func (f *fibUC) getFib(ctx context.Context, n uint) *big.Int {
 		n1, n2 = n2, n1
 	}
 
-	n1Str := n1.String()
-	if err := f.redisRepo.Add(ctx, nStr, n1Str); err != nil {
-		logger.Errorf("fibUC.getFib.redisRepo.Add: %s", err)
+	if caching {
+		resStr := n1.String()
+		keyStr := strconv.Itoa(int(n))
+		
+		// logger.Info("create: ", resStr)
+		if err := f.redisRepo.Add(ctx, keyStr, resStr); err != nil {
+			logger.Errorf("fibUC.getFib.redisRepo.Add: %s", err)
+		}
 	}
 
 	return n1
 }
 
+// makeInterval создает интервал по заданным параметрам
 func makeInterval(min, max int) []int {
 	a := make([]int, max-min+1)
 	for i := range a {

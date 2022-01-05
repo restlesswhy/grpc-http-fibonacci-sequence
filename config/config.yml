@@ -14,7 +14,6 @@ serverhttp:
   WriteTimeout: 10
 
 redis:
+  Caching: true
   RedisAddr: redis:6379
-  Password: ""
-  DB: 0
-  FibTTL: 72h
+  FibTTL: 24h

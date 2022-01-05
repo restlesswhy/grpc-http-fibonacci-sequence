@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
 	"github.com/labstack/echo/v4"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
@@ -29,10 +30,10 @@ const (
 type Server struct {
 	echo        *echo.Echo
 	cfg *config.Config
-	redisClient *redis.Client
+	redisClient *redis.Ring
 }
 
-func NewServer(cfg *config.Config, redisClient *redis.Client) *Server {
+func NewServer(cfg *config.Config, redisClient *redis.Ring) *Server {
 	return &Server{
 		echo: echo.New(),
 		cfg: cfg,
@@ -48,8 +49,13 @@ func (s *Server) Run() error {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
+	cache := cache.New(&cache.Options{
+        Redis:      s.redisClient,
+        LocalCache: cache.NewTinyLFU(1000, s.cfg.Redis.FibTTL),
+    })
+
 	ctx := context.Background()
-	redisRepo := repository.NewRedisRepo(s.redisClient, s.cfg)
+	redisRepo := repository.NewRedisRepo(cache, s.cfg)
 	fibUC := usecase.NewFibUC(s.cfg, redisRepo)
 	fibHandler := httpdel.NewFibHandler(fibUC)
 
@@ -60,7 +66,7 @@ func (s *Server) Run() error {
 	go func() {
 		logger.Infof("HTTP server is listening on PORT: %s", s.cfg.ServerHttp.Port)
 		if err := s.echo.StartServer(httpserver); err != nil {
-			logger.Fatalf("Error starting Server: ", err)
+			logger.Fatal("Error starting Server: ", err)
 		}
 	}()
 
