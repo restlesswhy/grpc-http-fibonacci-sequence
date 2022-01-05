@@ -6,19 +6,18 @@ import (
 	"github.com/go-redis/cache/v8"
 	"github.com/pkg/errors"
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/config"
-	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib"
 )
 
-type redisRepo struct {
+type RedisRepo struct {
 	cfg *config.Config
 	cache *cache.Cache
 }
 
-func NewRedisRepo(cache *cache.Cache, cfg *config.Config) fib.RedisRepository {
-	return &redisRepo{cache: cache, cfg: cfg}
+func NewRedisRepo(cache *cache.Cache, cfg *config.Config) *RedisRepo {
+	return &RedisRepo{cache: cache, cfg: cfg}
 }
 
-func (r *redisRepo) Add(ctx context.Context, key string, value string) error {
+func (r *RedisRepo) Add(ctx context.Context, key string, value string) error {
 	if err := r.cache.Set(&cache.Item{
 		Ctx:   ctx,
 		Key:   key,
@@ -31,7 +30,7 @@ func (r *redisRepo) Add(ctx context.Context, key string, value string) error {
 	return nil
 }
 
-func (r *redisRepo) CheckFib(ctx context.Context, key string) (string, bool, error) {
+func (r *RedisRepo) CheckFib(ctx context.Context, key string) (string, bool, error) {
 	var isExist bool
 	var res string
 	var err error

@@ -14,7 +14,7 @@ type FibHandler struct {
 	fibUC fib.UseCase
 }
 
-func NewFibHandler(fibUC fib.UseCase) fib.Handler {
+func NewFibHandler(fibUC fib.UseCase) *FibHandler {
 	return &FibHandler{
 		fibUC: fibUC,
 	}
@@ -39,6 +39,6 @@ func (h *FibHandler) Get() echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 
-		return c.JSON(http.StatusOK, seq.Seq)
+		return c.JSON(http.StatusOK, seq)
 	}
 }

@@ -13,20 +13,20 @@ import (
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/pkg/logger"
 )
 
-type fibUC struct {
+type FibUC struct {
 	cfg       *config.Config
 	redisRepo fib.RedisRepository
 }
 
-func NewFibUC(cfg *config.Config, redisRepo fib.RedisRepository) fib.UseCase {
-	return &fibUC{
+func NewFibUC(cfg *config.Config, redisRepo fib.RedisRepository) *FibUC {
+	return &FibUC{
 		cfg:       cfg,
 		redisRepo: redisRepo,
 	}
 }
 
 // GetSeq главная функция бизнес логики, создает заданный слайс
-func (f *fibUC) GetSeq(ctx context.Context, from, to int32) (models.FibSeq, error) {
+func (f *FibUC) GetSeq(ctx context.Context, from, to int32) (models.FibSeq, error) {
 	t := time.Now()
 	var fibSeq models.FibSeq
 	fibSeq.Seq = make(map[int32]string)
@@ -46,7 +46,7 @@ func (f *fibUC) GetSeq(ctx context.Context, from, to int32) (models.FibSeq, erro
 }
 
 // getFib вычисляет число фиобанччи, работает с базой данных
-func (f *fibUC) getFib(ctx context.Context, n uint, caching bool) *big.Int {
+func (f *FibUC) getFib(ctx context.Context, n uint, caching bool) *big.Int {
 
 	
 	if n <= 1 {
