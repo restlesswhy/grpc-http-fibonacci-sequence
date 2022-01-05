@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"time"
 
-	// "encoding/json"
 	"net/http"
 	"net/http/httptest"
 
@@ -40,8 +40,54 @@ func (s *FibTestSuite) TestHttpGetSequence() {
 
 	_ = json.Unmarshal(respByte, &fibResponse)
 
-	resExist, err := s.usecase.GetSeq(context.Background(), 1, 100)
+	resExpect, err := s.usecase.GetSeq(context.Background(), 1, 100)
 	s.NoError(err) 
 
-	r.Equal(resExist.Seq, fibResponse.Seq)
+	r.Equal(resExpect.Seq, fibResponse.Seq)
+}
+
+func (s *FibTestSuite) TestGrpcGetSequence() {
+
+}
+
+func (s *FibTestSuite) TestHttpGetSequence_TryCache() {
+	router := echo.New()
+	httpdel.MapRoutes(router.Group("/api"), s.httpHandler)
+	r := s.Require()
+
+	inputBody := `{"from": 1, "to": 100}`
+
+	req, _ := http.NewRequest("GET", "/api/seq", bytes.NewBuffer([]byte(inputBody)))
+	req.Header.Set("Content-type", "application/json")
+
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	r.Equal(http.StatusOK, resp.Result().StatusCode)
+
+	exist := s.cache.Exists(context.Background(), "5")
+	r.True(exist)
+	
+	time.Sleep(6 * time.Second)
+
+	exist = s.cache.Exists(context.Background(), "5")
+	r.False(exist)
+}
+
+func (s *FibTestSuite) TestHttpGetSequence_TryWithoutCache() {
+	s.cfg.Redis.Caching = false
+	router := echo.New()
+	httpdel.MapRoutes(router.Group("/api"), s.httpHandler)
+	r := s.Require()
+
+	inputBody := `{"from": 1, "to": 100}`
+
+	req, _ := http.NewRequest("GET", "/api/seq", bytes.NewBuffer([]byte(inputBody)))
+	req.Header.Set("Content-type", "application/json")
+
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	r.Equal(http.StatusOK, resp.Result().StatusCode)
+
+	exist := s.cache.Exists(context.Background(), "5")
+	r.False(exist)
 }

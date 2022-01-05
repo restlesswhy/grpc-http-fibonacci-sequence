@@ -2,7 +2,8 @@ package httpdel
 
 import (
 	"bytes"
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,6 +14,10 @@ import (
 	"github.com/restlesswhy/grpc/grpc-rest-fibonacci-sequence/internal/fib/models"
 	"github.com/stretchr/testify/require"
 )
+
+type FibResponse struct {
+	Seq map[int32]string `json:"seq"`
+}
 
 func TestFibHandler_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -35,14 +40,18 @@ func TestFibHandler_Get(t *testing.T) {
 		Seq: make(map[int32]string),
 	}
 	resultSeq.Seq[1] = "1"
-	exp := `{"1":"1"}
-`
-
+	
+	
 	mockFibUC.EXPECT().GetSeq(gomock.Any(), gomock.Any(), gomock.Any()).Return(resultSeq, nil)
+	
+	errR := handleFunc(c)
+	var fibResponse FibResponse
 
-	err := handleFunc(c)
-	fmt.Println(rec.Body.String())
+	respByte, err := ioutil.ReadAll(rec.Body)
 	require.NoError(t, err)
+	_ = json.Unmarshal(respByte, &fibResponse)
+
+	require.NoError(t, errR)
 	require.Equal(t, 200, rec.Code)
-	require.Equal(t, exp, rec.Body.String())
+	require.Equal(t, resultSeq.Seq, fibResponse.Seq)
 }

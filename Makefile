@@ -15,3 +15,6 @@ test.integration:
 
 	go test -v ./tests/
 	docker stop $$TEST_CONTAINER_NAME
+
+test:
+	go test --short -v ./...
